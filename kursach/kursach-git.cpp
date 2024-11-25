@@ -8,6 +8,8 @@ void filling_arrays(std::fstream* ptr_f, double** points, const int* size);
 int protocol_arrays(std::fstream* ptr_out, double** points, const int* size);
 void transfer_arrays(double** res_points, double** points, const int* total_points, const int* size);
 void output_result(std::fstream* ptr_res, double** res_points, const int* total_points);
+void create_triangles(double** res_points, const int* size);
+void get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y);
 void memory_delete(double** arr);
 
 int main()
@@ -26,12 +28,14 @@ int main()
 
 	// заполним массив значениями 1e-3
 	zero_fill(points, &n);
+
 	// заполнение массива из файла 
 	filling_arrays(&f, points, &n);
 
 	// запись в протокол считанных данных
 	total_points = protocol_arrays(&out, points, &n);
-	if (total_points == 0) return 0;
+	if (total_points < 3) return 0;
+	//если total_points = 3??? что делаем 
 
 	// изменение массивов для удобной работы
 	double** res_points = new double* [2];
@@ -43,6 +47,10 @@ int main()
 
 	// вывод точек в result
 	output_result(&res, res_points, &total_points);
+
+	// создание треугольника и нахождение точек пересечения внутри ???
+	create_triangles(res_points, &total_points);
+
 	// очистка res_points
 	memory_delete(res_points);
 
@@ -61,7 +69,7 @@ bool get_quantity_n(std::fstream* ptr_f, int* ptr_n)
 	if (!ptr_f->eof())
 		*ptr_f >> *ptr_n;
 	// проверка количества строк, т.к их может быть меньше/больше, чем "должных"
-	if (*ptr_n <= 0) return false;
+	if (*ptr_n < 3) return false;
 	while (!ptr_f->eof())
 	{
 		double temp = -1e5;
@@ -215,6 +223,66 @@ void output_result(std::fstream* ptr_res, double** res_points, const int* total_
 	*ptr_res << '\n';
 }
 
+void create_triangles(double** res_points, const int* size)
+{
+	// перебор вершин для первого треугольника
+	for (int i = 0; i < *size; i++)
+	{
+		for (int j = i + 1; j < *size; j++)
+		{
+			for (int k = j + 1; j < *size; j++)
+			{
+				// перебор вершин для второго треугольника 
+				for (int i1 = 0; i1 < *size; i1++)
+				{
+					for (int j1 = i1 + 1; j1 < *size; j1++)
+					{
+						for (int k1 = j1 + 1; k1 < *size; k1++)
+						{
+							if (i != i1 && j != j1 && k != k1) // не может быть одинакового треугольника
+							{
+								double x_ij_j1k1, y_ij_j1k1, x_ij_j1i1, y_ij_j1i1, x_jk_j1k1, y_jk_j1k1, x_jk_i1k1, y_jk_i1k1, x_ik_j1i1, y_ik_j1i1, x_ik_i1k1, y_ik_i1k1; // координаты пересечения 
+								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], &x_ij_j1k1, &y_ij_j1k1);
+								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ij_j1i1, &y_ij_j1i1);
+								get_inter_point(res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], &x_jk_j1k1, &y_jk_j1k1);
+								get_inter_point(res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_jk_i1k1, &y_jk_i1k1);
+								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ik_j1i1, &y_ik_j1i1);
+								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_ik_i1k1, &y_ik_i1k1);
+								std::cout << "вершина 1.1 треуг: " << res_points[0][i] << ' ' << res_points[1][i] << '\n';
+								std::cout << "вершина 2.1 треуг: " << res_points[0][j] << ' ' << res_points[1][j] << '\n';
+								std::cout << "вершина 1.2 треуг: " << res_points[0][j1] << ' ' << res_points[1][j1] << '\n';
+								std::cout << "вершина 2.2 треуг: " << res_points[0][k1] << ' ' << res_points[1][k1] << '\n';
+								std::cout << "Точка пересечения: " << x_ij_j1k1 << ' ' << y_ij_j1k1;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y)
+{
+	// уравнение для прямой 1-го треугольника
+	double a1 = y2 - y1;
+	double b1 = x1 - x2;
+	double c1 = x2 * y1 - x1 * y2;
+
+	// уравнениие для прямой 2-го треугольника
+	double a2 = y4 - y3;
+	double b2 = x3 - x4;
+	double c2 = x4 * y3 - x3 * y4;
+
+	// найдем точку пересечения 
+	double det = a1 * b2 - a2 * b1;
+	double det_x = -c1 * b2 + c2 * b1;
+	double det_y = -a1 * c2 + a2 * c1;
+
+	*x = det_x / det; // координата по x  
+	*y = det_y / det; // координата по y 
+}
+
 void memory_delete(double** arr)
 {
 
@@ -225,3 +293,4 @@ void memory_delete(double** arr)
 
 	delete[] arr;
 }
+
