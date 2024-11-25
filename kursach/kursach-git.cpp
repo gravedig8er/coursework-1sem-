@@ -1,5 +1,6 @@
 #include <iostream> 
 #include <fstream> 
+#include <cstdio>
 
 bool get_quantity_n(std::fstream* ptr_f, int* ptr_n);
 void zero_fill(double** points, const int* size);
@@ -11,7 +12,7 @@ void memory_delete(double** arr);
 
 int main()
 {
-	int n, total_points = 0; 
+	int n, total_points = 0;
 	std::fstream f; // чтение из файла --- закрытие в filling_arrays
 	std::fstream out; // занесение в протокол
 	std::fstream res; // занесение в результат
@@ -23,10 +24,10 @@ int main()
 	double** points = new double* [2];
 	for (int i = 0; i < 2; i++) points[i] = new double[n];
 
-	// заполним массивы значениями 1e-3
+	// заполним массив значениями 1e-3
 	zero_fill(points, &n);
-	// заполнение массивов из файла 
-	filling_arrays(&f, points, &n); 
+	// заполнение массива из файла 
+	filling_arrays(&f, points, &n);
 
 	// запись в протокол считанных данных
 	total_points = protocol_arrays(&out, points, &n);
@@ -42,8 +43,9 @@ int main()
 
 	// вывод точек в result
 	output_result(&res, res_points, &total_points);
-	
+	// очистка res_points
 	memory_delete(res_points);
+
 	return 0;
 }
 
@@ -54,12 +56,12 @@ bool get_quantity_n(std::fstream* ptr_f, int* ptr_n)
 	ptr_f->open("D:/labs prog/kursach/points.txt", std::ios::in);
 	if (!ptr_f->is_open())
 	{
-		return false; 
+		return false;
 	}
 	if (!ptr_f->eof())
-		*ptr_f >> *ptr_n; 
+		*ptr_f >> *ptr_n;
 	// проверка количества строк, т.к их может быть меньше/больше, чем "должных"
-	if (*ptr_n <= 0) return false; 
+	if (*ptr_n <= 0) return false;
 	while (!ptr_f->eof())
 	{
 		double temp = -1e5;
@@ -76,7 +78,7 @@ bool get_quantity_n(std::fstream* ptr_f, int* ptr_n)
 	}
 	if (counter_lines < *ptr_n) *ptr_n = counter_lines;
 	ptr_f->clear();
-	ptr_f->seekg(0); 
+	ptr_f->seekg(0);
 	return true;
 }
 
@@ -91,13 +93,13 @@ void zero_fill(double** points, const int* size)
 
 void filling_arrays(std::fstream* ptr_f, double** points, const int* size)
 {
-	double needless; 
-	double temp; 
-	int i = 0; 
+	double needless = 0;
+	double temp;
+	int i = 0;
 	char symbol;
 	if (!ptr_f->eof()) *ptr_f >> needless; // считываем размер, пропускаем его
-	ptr_f->get(symbol); // считали переход строки после размера 
-	while (!ptr_f->eof())
+	ptr_f->get(symbol); // считали переход строки после размера
+	while (!ptr_f->eof() && i < needless)
 	{
 		ptr_f->get(symbol);
 		if ((symbol == ' ' || symbol == '\t') && symbol != '\n') // считаем, что утеряно значение х и нужно считать только y 
@@ -189,6 +191,7 @@ void transfer_arrays(double** res_points, double** points, const int* total_poin
 	{
 		if (points[0][i] != 1e-3 && points[1][i] != 1e-3)
 		{
+			if (point == *total_points) break;
 			res_points[0][point] = points[0][i];
 			res_points[1][point] = points[1][i];
 			point++;
@@ -214,9 +217,11 @@ void output_result(std::fstream* ptr_res, double** res_points, const int* total_
 
 void memory_delete(double** arr)
 {
+
 	for (int i = 0; i < 2; i++)
 	{
 		delete[] arr[i];
 	}
+
 	delete[] arr;
 }
