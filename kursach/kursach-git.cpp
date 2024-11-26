@@ -9,7 +9,8 @@ int protocol_arrays(std::fstream* ptr_out, double** points, const int* size);
 void transfer_arrays(double** res_points, double** points, const int* total_points, const int* size);
 void output_result(std::fstream* ptr_res, double** res_points, const int* total_points);
 void create_triangles(double** res_points, const int* size);
-void get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y);
+bool get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y);
+bool check_triangle(double x1, double y1, double x2, double y2, double x3, double y3);
 void memory_delete(double** arr);
 
 int main()
@@ -228,31 +229,45 @@ void create_triangles(double** res_points, const int* size)
 	// перебор вершин для первого треугольника
 	for (int i = 0; i < *size; i++)
 	{
-		for (int j = i + 1; j < *size; j++)
+		for (int j = i + 1; j < *size - 1; j++)
 		{
-			for (int k = j + 1; j < *size; j++)
+			for (int k = j + 1; j < *size - 2; j++)
 			{
 				// перебор вершин для второго треугольника 
-				for (int i1 = 0; i1 < *size; i1++)
+				for (int i1 = 0; i1 < *size - 3; i1++)
 				{
-					for (int j1 = i1 + 1; j1 < *size; j1++)
+					for (int j1 = i1 + 1; j1 < *size - 4; j1++)
 					{
-						for (int k1 = j1 + 1; k1 < *size; k1++)
+						for (int k1 = j1 + 1; k1 < *size - 5; k1++)
 						{
 							if (i != i1 && j != j1 && k != k1) // не может быть одинакового треугольника
 							{
 								double x_ij_j1k1, y_ij_j1k1, x_ij_j1i1, y_ij_j1i1, x_jk_j1k1, y_jk_j1k1, x_jk_i1k1, y_jk_i1k1, x_ik_j1i1, y_ik_j1i1, x_ik_i1k1, y_ik_i1k1; // координаты пересечения 
-								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], &x_ij_j1k1, &y_ij_j1k1);
-								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ij_j1i1, &y_ij_j1i1);
-								get_inter_point(res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], &x_jk_j1k1, &y_jk_j1k1);
-								get_inter_point(res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_jk_i1k1, &y_jk_i1k1);
-								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ik_j1i1, &y_ik_j1i1);
-								get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_ik_i1k1, &y_ik_i1k1);
-								std::cout << "вершина 1.1 треуг: " << res_points[0][i] << ' ' << res_points[1][i] << '\n';
-								std::cout << "вершина 2.1 треуг: " << res_points[0][j] << ' ' << res_points[1][j] << '\n';
-								std::cout << "вершина 1.2 треуг: " << res_points[0][j1] << ' ' << res_points[1][j1] << '\n';
-								std::cout << "вершина 2.2 треуг: " << res_points[0][k1] << ' ' << res_points[1][k1] << '\n';
-								std::cout << "Точка пересечения: " << x_ij_j1k1 << ' ' << y_ij_j1k1;
+								bool res1 = get_inter_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], &x_ij_j1k1, &y_ij_j1k1);
+								bool res2 = get_inter_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ij_j1i1, &y_ij_j1i1);
+								bool res3 = get_inter_point(res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], &x_jk_j1k1, &y_jk_j1k1);
+								bool res4 = get_inter_point(res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_jk_i1k1, &y_jk_i1k1);
+								bool res5 = get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ik_j1i1, &y_ik_j1i1);
+								bool res6 = get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_ik_i1k1, &y_ik_i1k1);
+								bool check_first = check_triangle(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k]);
+								bool check_second = check_triangle(res_points[0][i1], res_points[1][i1], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1]);
+								if (check_first && check_second)
+								{
+									int counter_inter_points = res1 + res2 + res3 + res4 + res5 + res6;
+									std::cout << "First triangle: " << '(' << res_points[0][i] << ';' << res_points[1][i] << ')' << ' '
+										<< '(' << res_points[0][j] << ';' << res_points[1][j] << ')' << ' '
+										<< '(' << res_points[0][k] << ';' << res_points[1][k] << ')' << "\n";
+									std::cout << "Second triangle: " << '(' << res_points[0][i1] << ';' << res_points[1][i1] << ')' << ' '
+										<< '(' << res_points[0][j1] << ';' << res_points[1][j1] << ')' << ' '
+										<< '(' << res_points[0][k1] << ';' << res_points[1][k1] << ')' << "\n";
+									std::cout << "Inter points: " << '(' << x_ij_j1k1 << ';' << y_ij_j1k1 << ')' << ' '
+										<< '(' << x_ij_j1i1 << ';' << y_ij_j1i1 << ')' << ' '
+										<< '(' << x_jk_j1k1 << ';' << y_jk_j1k1 << ')' << ' '
+										<< '(' << x_jk_i1k1 << ';' << y_jk_i1k1 << ')' << ' '
+										<< '(' << x_ik_j1i1 << ';' << y_ik_j1i1 << ')' << ' '
+										<< '(' << x_ik_i1k1 << ';' << y_ik_i1k1 << ')' << "\n";
+									std::cout << "Quantity inter points: " << counter_inter_points << "\n\n";
+								}
 							}
 						}
 					}
@@ -262,7 +277,7 @@ void create_triangles(double** res_points, const int* size)
 	}
 }
 
-void get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y)
+bool get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y)
 {
 	// уравнение для прямой 1-го треугольника
 	double a1 = y2 - y1;
@@ -278,9 +293,21 @@ void get_inter_point(double x1, double y1, double x2, double y2, double x3, doub
 	double det = a1 * b2 - a2 * b1;
 	double det_x = -c1 * b2 + c2 * b1;
 	double det_y = -a1 * c2 + a2 * c1;
-
 	*x = det_x / det; // координата по x  
 	*y = det_y / det; // координата по y 
+	if (det == 0 && (det_x == det_y)) return false;
+	return true;
+}
+
+bool check_triangle(double x1, double y1, double x2, double y2, double x3, double y3)
+{
+	double ij, ik, jk;
+	ij = sqrtf((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+	ik = sqrtf((x3 - x1) * (x3 - x1) + (y3 - y1) * (y3 - y1));
+	jk = sqrtf((x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2));
+	if ((ij + ik) > jk && (ij + jk) > ik && (ik + jk) > ij)
+		return true;
+	return false;
 }
 
 void memory_delete(double** arr)
