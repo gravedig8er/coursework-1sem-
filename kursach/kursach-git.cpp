@@ -10,7 +10,11 @@ void transfer_arrays(double** res_points, double** points, const int* total_poin
 void output_result(std::fstream* ptr_res, double** res_points, const int* total_points);
 void create_triangles(double** res_points, const int* size);
 bool get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y);
+//void check_void_points();
 bool check_triangle(double x1, double y1, double x2, double y2, double x3, double y3);
+double get_sq_triangle(double x1, double y1, double x2, double y2, double x3, double y3);
+double get_length(double x1, double y1, double x2, double y2);
+bool check_point(double x1, double y1, double x2, double y2, double x3, double y3, double x, double y, double sq);
 void memory_delete(double** arr);
 
 int main()
@@ -267,6 +271,21 @@ void create_triangles(double** res_points, const int* size)
 										<< '(' << x_ik_j1i1 << ';' << y_ik_j1i1 << ')' << ' '
 										<< '(' << x_ik_i1k1 << ';' << y_ik_i1k1 << ')' << "\n";
 									std::cout << "Quantity inter points: " << counter_inter_points << "\n\n";
+
+									double sq_triangle_f = get_sq_triangle(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k]);
+									double sq_triangle_s = get_sq_triangle(res_points[0][i1], res_points[1][i1], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1]);
+
+									// проверка для первого треугольника трех точек из второго. true - точка внутри, false - точка снаружи. i1, j1, k1
+									bool first_point_f = check_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], sq_triangle_f);
+									bool second_point_f = check_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], sq_triangle_f);
+									bool third_point_f = check_point(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k], res_points[0][k1], res_points[1][k1], sq_triangle_f);
+
+									// проверка для второго треугольника трех точек из первого. true - точка внутри, false - снаружи. i, j, k
+									bool first_point_s = check_point(res_points[0][i1], res_points[1][i1], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], res_points[0][i], res_points[1][i], sq_triangle_s);
+									bool second_point_s = check_point(res_points[0][i1], res_points[1][i1], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], res_points[0][j], res_points[1][j], sq_triangle_s);
+									bool third_point_s = check_point(res_points[0][i1], res_points[1][i1], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1], res_points[0][k], res_points[1][k], sq_triangle_s);
+
+									// потом нужно считать количество пересечений, исключая точки внутри. (???) то есть часть кода сверху перекинется сюда. 
 								}
 							}
 						}
@@ -306,6 +325,35 @@ bool check_triangle(double x1, double y1, double x2, double y2, double x3, doubl
 	ik = sqrtf((x3 - x1) * (x3 - x1) + (y3 - y1) * (y3 - y1));
 	jk = sqrtf((x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2));
 	if ((ij + ik) > jk && (ij + jk) > ik && (ik + jk) > ij)
+		return true;
+	return false;
+}
+
+double get_sq_triangle(double x1, double y1, double x2, double y2, double x3, double y3)
+{
+	double side_1 = get_length(x1, y1, x2, y2);
+	double side_2 = get_length(x1, y1, x3, y3);
+	double side_3 = get_length(x2, y2, x3, y3);
+	double p = (side_1 + side_2 + side_3) / 2;
+
+	return sqrtf(p * (p - side_1) * (p - side_2) * (p - side_3));
+}
+
+double get_length(double x1, double y1, double x2, double y2)
+{
+	return std::hypotf(x1 - x2, y1 - y2);
+}
+
+bool check_point(double x1, double y1, double x2, double y2, double x3, double y3, double x, double y, double sq)
+{
+	// проверка точки с координатами x, y
+	double first_tr = get_sq_triangle(x1, y1, x2, y2, x, y);
+	double second_tr = get_sq_triangle(x2, y2, x3, y3, x, y);
+	double third_tr = get_sq_triangle(x1, y1, x3, y3, x, y);
+
+	double eps = 1e-3;
+	double sum_sq = first_tr + second_tr + third_tr;
+	if (abs(sum_sq - sq) < eps)
 		return true;
 	return false;
 }
