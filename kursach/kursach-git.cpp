@@ -13,9 +13,13 @@ bool get_inter_point(double x1, double y1, double x2, double y2, double x3, doub
 //void check_void_points();
 bool check_triangle(double x1, double y1, double x2, double y2, double x3, double y3);
 double get_sq_triangle(double x1, double y1, double x2, double y2, double x3, double y3);
+double get_sq_square(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
+double get_sq_pent(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5);
+double get_sq_hex(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5, double x6, double y6);
 double get_length(double x1, double y1, double x2, double y2);
 bool check_point(double x1, double y1, double x2, double y2, double x3, double y3, double x, double y, double sq);
-int get_quiantity_inter_point(double a, double b, double c, double d, double e, double f);
+int get_quiantity_inter_point(double a, double b, double c, double d, double e, double f, bool res1, bool res2, bool res3, bool res4, bool res5, bool res6);
+void fill_vertex(double** vertex, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5, double x6, double y6, int size);
 void memory_delete(double** arr);
 
 int main()
@@ -54,7 +58,7 @@ int main()
 	// вывод точек в result
 	output_result(&res, res_points, &total_points);
 
-	// создание треугольника и нахождение точек пересечения внутри ???
+	// создание треугольника и нахождение площадей внутри. возвращать количество треугольников? как хранить площади
 	create_triangles(res_points, &total_points);
 
 	// очистка res_points
@@ -231,6 +235,7 @@ void output_result(std::fstream* ptr_res, double** res_points, const int* total_
 
 void create_triangles(double** res_points, const int* size)
 {
+	double max_sq = -1;
 	// перебор вершин для первого треугольника
 	for (int i = 0; i < *size; i++)
 	{
@@ -247,6 +252,7 @@ void create_triangles(double** res_points, const int* size)
 						{
 							if (i != i1 && j != j1 && k != k1) // не может быть одинакового треугольника
 							{
+
 								int counter = 0;
 								double x_ij_j1k1, y_ij_j1k1, x_ij_j1i1, y_ij_j1i1, x_jk_j1k1, y_jk_j1k1, x_jk_i1k1, y_jk_i1k1, x_ik_j1i1, y_ik_j1i1, x_ik_i1k1, y_ik_i1k1; // координаты пересечения 
 								bool check_first = check_triangle(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k]);
@@ -302,7 +308,6 @@ void create_triangles(double** res_points, const int* size)
 									bool res5 = get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][j1], res_points[1][j1], res_points[0][i1], res_points[1][i1], &x_ik_j1i1, &y_ik_j1i1);
 									bool res6 = get_inter_point(res_points[0][i], res_points[1][i], res_points[0][k], res_points[1][k], res_points[0][i1], res_points[1][i1], res_points[0][k1], res_points[1][k1], &x_ik_i1k1, &y_ik_i1k1);
 
-
 									// здесь я переопределяю точки пересечения, чтобы они не содержали лишних значений (например, когда точка внутри)
 									// то есть после данных условий у меня остаются только чистые точки пересечения, которые не равны 1e-3
 									if (ready[0][0] != 1e-3) { x_ij_j1i1 = res_points[0][i];  y_ij_j1i1 = res_points[1][i]; x_ik_j1i1 = 1e-3; y_ik_j1i1 = 1e-3; } // i
@@ -311,6 +316,21 @@ void create_triangles(double** res_points, const int* size)
 									if (ready[0][3] != 1e-3) { x_ik_i1k1 = res_points[0][i1]; y_ik_i1k1 = res_points[1][i1]; x_ik_j1i1 = 1e-3; y_ik_j1i1 = 1e-3; } // i1
 									if (ready[0][4] != 1e-3) { x_ij_j1i1 = res_points[0][j1]; y_ij_j1i1 = res_points[1][j1]; x_ij_j1k1 = 1e-3; y_ij_j1k1 = 1e-3; } // j1
 									if (ready[0][5] != 1e-3) { x_jk_i1k1 = res_points[0][k1]; y_jk_i1k1 = res_points[1][k1]; x_jk_j1k1 = 1e-3; y_jk_j1k1 = 1e-3; } // k1
+
+									// переопределение пересечений с учетом возможности наложения (res1-6)
+									counter = 0;
+									if (x_ij_j1k1 != 1e-3 && res1) counter++;
+									else x_ij_j1k1 = 1e-3;
+									if (x_ij_j1i1 != 1e-3 && res2) counter++;
+									else x_ij_j1i1 = 1e-3;
+									if (x_jk_j1k1 != 1e-3 && res3) counter++;
+									else x_jk_j1k1 = 1e-3;
+									if (x_jk_i1k1 != 1e-3 && res4) counter++;
+									else x_jk_i1k1 = 1e-3;
+									if (x_ik_j1i1 != 1e-3 && res5) counter++;
+									else x_ik_j1i1 = 1e-3;
+									if (x_ik_i1k1 != 1e-3 && res6) counter++;
+									else x_ik_i1k1 = 1e-3;
 
 									// количество точек пересечения между треугольниками. рассмотреть случай, когда 1 точка внутри, а вторая точка - общая!!!
 									std::cout << "First triangle: " << '(' << res_points[0][i] << ';' << res_points[1][i] << ')' << ' '
@@ -326,8 +346,56 @@ void create_triangles(double** res_points, const int* size)
 										<< '(' << x_ik_j1i1 << ';' << y_ik_j1i1 << ')' << ' '
 										<< '(' << x_ik_i1k1 << ';' << y_ik_i1k1 << ')' << "\n";
 
-									int quantity_inter_point = get_quiantity_inter_point(x_ij_j1k1, x_ij_j1i1, x_jk_j1k1, x_jk_i1k1, x_ik_j1i1, x_ik_i1k1);
-									std::cout << "Quantity inter points: " << quantity_inter_point << "\n\n";
+									//int quantity_inter_point = get_quiantity_inter_point(x_ij_j1k1, x_ij_j1i1, x_jk_j1k1, x_jk_i1k1, x_ik_j1i1, x_ik_i1k1, res1, res2, res3, res4, res5, res6);
+									std::cout << "Quantity inter points: " << counter << "\n";
+									// массив точек пересечения. координаты х у 
+									double** vertex = new double* [2];
+									vertex[0] = new double[counter];
+									vertex[1] = new double[counter];
+									fill_vertex(vertex, x_ij_j1k1, y_ij_j1k1,
+										x_ij_j1i1, y_ij_j1i1,
+										x_jk_j1k1, y_jk_j1k1,
+										x_jk_i1k1, y_jk_i1k1,
+										x_ik_j1i1, y_ik_j1i1,
+										x_ik_i1k1, y_ik_i1k1, counter);
+
+									// ну и теперь считаем по количеству точек пересечения. их от 3 до 6
+									// в массиве vertex хранятся координаты точек пересечения фигуры, полученной в результате
+									double sq_figure = 0.0;
+									if (counter == 3) // -- треугольник
+									{
+										sq_figure = get_sq_triangle(vertex[0][0], vertex[1][0],
+											vertex[0][1], vertex[1][1],
+											vertex[0][2], vertex[1][2]);
+									}
+
+									if (counter == 4) // -- четырехугольник 
+									{
+										sq_figure = get_sq_square(vertex[0][0], vertex[1][0],
+											vertex[0][1], vertex[1][1],
+											vertex[0][2], vertex[1][2],
+											vertex[0][3], vertex[1][3]);
+									}
+									if (counter == 5) // -- пятиугольник
+									{
+										sq_figure = get_sq_pent(vertex[0][0], vertex[1][0],
+											vertex[0][1], vertex[1][1],
+											vertex[0][2], vertex[1][2],
+											vertex[0][3], vertex[1][3],
+											vertex[0][4], vertex[1][4]);
+									}
+									if (counter == 6) // --шестиугольник
+									{
+										sq_figure = get_sq_hex(vertex[0][0], vertex[1][0],
+											vertex[0][1], vertex[1][1],
+											vertex[0][2], vertex[1][2],
+											vertex[0][3], vertex[1][3],
+											vertex[0][4], vertex[1][4],
+											vertex[0][5], vertex[1][5]);
+									}
+									if (max_sq < sq_figure) max_sq = sq_figure;
+									std::cout << "SQUARE " << sq_figure << "\n\n";
+									memory_delete(vertex);
 								}
 							}
 						}
@@ -336,6 +404,7 @@ void create_triangles(double** res_points, const int* size)
 			}
 		}
 	}
+	std::cout << "MAX SQUARE: " << max_sq << '\n';
 }
 
 bool get_inter_point(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double* x, double* y)
@@ -381,6 +450,29 @@ double get_sq_triangle(double x1, double y1, double x2, double y2, double x3, do
 	return sqrtf(p * (p - side_1) * (p - side_2) * (p - side_3));
 }
 
+double get_sq_square(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4)
+{
+	double side_1 = get_length(x1, y1, x2, y2);
+	double side_2 = get_length(x2, y2, x3, y3);
+	double side_3 = get_length(x3, y3, x4, y4);
+	double side_4 = get_length(x4, y4, x1, y1);
+	double p = (side_1 + side_2 + side_3 + side_4) / 2;
+
+	return sqrtf((p - side_1) * (p - side_2) * (p - side_3) * (p - side_4));
+}
+
+double get_sq_pent(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5)
+{
+	double sq = 0.5 * abs(x1 * y2 + x2 * y3 + x3 * y4 + x4 * y5 + x5 * y1 - x2 * y1 - x3 * y2 - x4 * y3 - x5 * y4 - x1 * y5);
+	return sq;
+}
+
+double get_sq_hex(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5, double x6, double y6)
+{
+	double sq = 0.5 * abs(x1 * y2 + x2 * y3 + x3 * y4 + x4 * y5 + x5 * y6 + x6 * y1 - y1 * x2 - y2 * x3 - y3 * x4 - y4 * x5 - y5 * x6 - y6 * x1);
+	return sq;
+}
+
 double get_length(double x1, double y1, double x2, double y2)
 {
 	return std::hypotf(x1 - x2, y1 - y2);
@@ -393,24 +485,59 @@ bool check_point(double x1, double y1, double x2, double y2, double x3, double y
 	double second_tr = get_sq_triangle(x2, y2, x3, y3, x, y);
 	double third_tr = get_sq_triangle(x1, y1, x3, y3, x, y);
 
-	double eps = 1e-3;
+	double eps = 1e-15;
 	double sum_sq = first_tr + second_tr + third_tr;
 	if (abs(sum_sq - sq) < eps)
 		return true;
 	return false;
 }
 
-int get_quiantity_inter_point(double a, double b, double c, double d, double e, double f)
+int get_quiantity_inter_point(double a, double b, double c, double d, double e, double f, bool res1, bool res2, bool res3, bool res4, bool res5, bool res6)
 {
 	int counter = 0;
-	if (a != 1e-3) counter++;
-	if (b != 1e-3) counter++;
-	if (c != 1e-3) counter++;
-	if (d != 1e-3) counter++;
-	if (e != 1e-3) counter++;
-	if (f != 1e-3) counter++;
+	if (a != 1e-3 && res1) counter++;
+	if (b != 1e-3 && res2) counter++;
+	if (c != 1e-3 && res3) counter++;
+	if (d != 1e-3 && res4) counter++;
+	if (e != 1e-3 && res5) counter++;
+	if (f != 1e-3 && res6) counter++;
 
 	return counter;
+}
+
+void fill_vertex(double** vertex, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double x5, double y5, double x6, double y6, int size)
+{
+	int counter = 0;
+	if (x1 != 1e-3 && y1 != 1e-3)
+	{
+		vertex[0][counter] = x1; vertex[1][counter] = y1;
+		counter++;
+	}
+	if (x2 != 1e-3 && y2 != 1e-3)
+	{
+		vertex[0][counter] = x2; vertex[1][counter] = y2;
+		counter++;
+	}
+	if (x3 != 1e-3 && y3 != 1e-3)
+	{
+		vertex[0][counter] = x3; vertex[1][counter] = y3;
+		counter++;
+	}
+	if (x4 != 1e-3 && y4 != 1e-3)
+	{
+		vertex[0][counter] = x4; vertex[1][counter] = y4;
+		counter++;
+	}
+	if (x5 != 1e-3 && y5 != 1e-3)
+	{
+		vertex[0][counter] = x5; vertex[1][counter] = y5;
+		counter++;
+	}
+	if (x6 != 1e-3 && y6 != 1e-3)
+	{
+		vertex[0][counter] = x6; vertex[1][counter] = y6;
+		counter++;
+	}
 }
 
 void memory_delete(double** arr)
