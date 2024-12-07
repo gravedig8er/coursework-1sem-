@@ -180,29 +180,29 @@ int protocol_arrays(std::fstream* ptr_out, double** points, const int* size)
 	ptr_out->open("D:/labs prog/kursach/protocol.txt", std::ios::out);
 	if (!ptr_out->is_open())
 	{
-		std::cout << "Протокол не открылся \n";
+		*ptr_out << "Протокол не открылся \n";
 		return 0;
 	}
-	std::cout << "Количество ожидаемых точек: " << *size << "\n\n";
+	*ptr_out << "Количество ожидаемых точек: " << *size << "\n\n";
 	for (int i = 0; i < *size; i++)
 	{
-		std::cout << "Точка " << i + 1 << ": \t";
+		*ptr_out << "Точка " << i + 1 << ": \t";
 		if (points[0][i] == 1e-3 && points[1][i] != 1e-3)
 		{
-			std::cout << "не хватает х    " << "y: " << points[1][i] << '\n';
+			*ptr_out << "не хватает х    " << "y: " << points[1][i] << '\n';
 		}
 		if (points[0][i] != 1e-3 && points[1][i] == 1e-3)
 		{
-			std::cout << "x: " << points[0][i] << "\t\t" << "не хватает y\n";
+			*ptr_out << "x: " << points[0][i] << "\t\t" << "не хватает y\n";
 		}
 		if (points[0][i] != 1e-3 && points[1][i] != 1e-3)
 		{
-			std::cout << "x: " << points[0][i] << "\t\t" << "y: " << points[1][i] << '\n';
+			*ptr_out << "x: " << points[0][i] << "\t\t" << "y: " << points[1][i] << '\n';
 			total_points++;
 		}
 	}
-	std::cout << '\n';
-	std::cout << "Всего точек: " << total_points << "\n\n";
+	*ptr_out << '\n';
+	*ptr_out << "Всего точек: " << total_points << "\n\n";
 	return total_points;
 }
 
@@ -247,7 +247,6 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 	// массив для хранения вершин с максимальной площадью
 	double** arr_vertex = new double* [2];
 	for (int i = 0; i < 2; i++) arr_vertex[i] = new double[6];
-
 	// перебор вершин для первого треугольника
 	for (int i = 0; i < *size - 3; i++)
 	{
@@ -262,11 +261,13 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 					{
 						for (int k1 = j1 + 1; k1 < *size - 1; k1++)
 						{
-							std::cout << "First triangle: "
+							static size_t counter;
+							std::cout << "Pairs collected" << ++counter << '\n';
+							*ptr_out << "First triangle: "
 								<< '(' << res_points[0][i] << ';' << res_points[1][i] << ')' << ' '
 								<< '(' << res_points[0][j] << ';' << res_points[1][j] << ')' << ' '
 								<< '(' << res_points[0][k] << ';' << res_points[1][k] << ')' << ' ';
-							std::cout << "Second triangle: "
+							*ptr_out << "Second triangle: "
 								<< '(' << res_points[0][i1] << ';' << res_points[1][i1] << ')' << ' '
 								<< '(' << res_points[0][j1] << ';' << res_points[1][j1] << ')' << ' '
 								<< '(' << res_points[0][k1] << ';' << res_points[1][k1] << ')' << ' ';
@@ -275,9 +276,10 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 								(i == j1 && j == i1 && k == k1) ||
 								(i == j1 && j == k1 && k == i1) ||
 								(i == k1 && j == i1 && k == j1) ||
-								(i == k1 && j == j1 && k == i1)))
+								(i == k1 && j == j1 && k == i1))
+								)
 							{
-								std::cout << "Такой набор точек не подходит для создания треугольника \n\n"; continue;
+								*ptr_out << "Такой набор точек не подходит для создания треугольника \n\n"; continue;
 							}
 							if (!((i == i1 && j == j1 && k == k1) ||
 								(i == i1 && j == k1 && k == j1) ||
@@ -286,11 +288,11 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 								(i == k1 && j == i1 && k == j1) ||
 								(i == k1 && j == j1 && k == i1))) // не может быть одинакового треугольника
 							{
-								std::cout << '\n';
+								*ptr_out << '\n';
 								bool check_first = check_triangle(res_points[0][i], res_points[1][i], res_points[0][j], res_points[1][j], res_points[0][k], res_points[1][k]);
 								bool check_second = check_triangle(res_points[0][i1], res_points[1][i1], res_points[0][j1], res_points[1][j1], res_points[0][k1], res_points[1][k1]);
 								// проверка на существование треугольников (двух) 
-								if (!check_first && !check_second) { std::cout << "Такой набор точек не подходит для создания треугольника \n\n"; continue; }
+								if (!check_first && !check_second) { *ptr_out << "Такой набор точек не подходит для создания треугольника \n\n"; continue; }
 								else
 								{
 									// переназначение точек
@@ -1823,10 +1825,10 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 									}
 
 
-									std::cout << "Inter points: ";
+									*ptr_out << "Inter points: ";
 									for (int i = 0; i < counter; i++)
 									{
-										std::cout << '(' << points[0][i] << "; " << points[1][i] << ')' << ' ';
+										*ptr_out << '(' << points[0][i] << "; " << points[1][i] << ')' << ' ';
 									}
 
 									double sq_figure = 0.0;
@@ -1865,6 +1867,7 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 									if (max_sq == sq_figure)
 									{
 										max_sq = sq_figure;
+										// то есть тут проверка, а потом увеличение счетчика и массива
 										total_triangles++;
 
 										arr_vertex = append(arr_vertex, &length, &capacity, res_points[0][i], res_points[1][i],
@@ -1904,11 +1907,17 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 										arr_vertex[1][length++] = res_points[1][k1];
 
 									}
-									std::cout << '\n';
-									std::cout << "SQUARE " << sq_figure << "\n";
-
-									std::cout << "\n\n";
+									*ptr_out << '\n';
+									*ptr_out << "SQUARE " << sq_figure << "\n";
+									if (sq_figure == 52.0) std::cout << res_points[0][i] << ' ' << res_points[1][i] << ' ' <<
+										res_points[0][j] << ' ' << res_points[1][j] << ' ' <<
+										res_points[0][k] << ' ' << res_points[1][k] << '\n' <<
+										res_points[0][i1] << ' ' << res_points[1][i1] << ' ' <<
+										res_points[0][j1] << ' ' << res_points[1][j1] << ' ' <<
+										res_points[0][k1] << ' ' << res_points[1][k1] << '\n';
+									*ptr_out << "\n";
 									memory_delete(finally_ar);
+
 								}
 							}
 						}
@@ -1917,28 +1926,28 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 			}
 		}
 	}
-	std::cout << "MAX SQUARE: " << max_sq << '\n';
-	std::cout << "TOTAL TRIANGLES: " << total_triangles << '\n';
+	*ptr_out << "MAX SQUARE: " << max_sq << '\n';
+	*ptr_out << "TOTAL TRIANGLES: " << total_triangles << '\n';
 
 	*ptr_res << "Количество пар: " << total_triangles << '\n';
 	*ptr_res << "Максимальная площадь: " << max_sq << "\n\n";
 	int counter = 1;
 	int counter_pare = 1;
 	*ptr_res << counter_pare << " пара\n";
-	std::cout << '\n' << counter_pare << " пара\n";
+	*ptr_out << '\n' << counter_pare << " пара\n";
 	for (int i = 0; i < length; i += 3)
 	{
 		if (counter % 2 != 0 && i != 0)
 		{
-			*ptr_res << ++counter_pare << " пара\n"; std::cout << counter_pare << " пара\n";
+			*ptr_res << ++counter_pare << " пара\n"; *ptr_out << counter_pare << " пара\n";
 		}
 		*ptr_res << counter << " треугольник:\n";
 		*ptr_res << '(' << arr_vertex[0][i] << ';' << arr_vertex[1][i] << ')' << '(' << arr_vertex[0][i + 1] << ';' << arr_vertex[1][i + 1] << ')' << '(' << arr_vertex[0][i + 2] << ';' << arr_vertex[1][i + 2] << ')';
 		*ptr_res << '\n';
-		std::cout << counter << " треугольник:\n";
-		std::cout << '(' << arr_vertex[0][i] << ';' << arr_vertex[1][i] << ')' << '(' << arr_vertex[0][i + 1] << ';' << arr_vertex[1][i + 1] << ')' << '(' << arr_vertex[0][i + 2] << ';' << arr_vertex[1][i + 2] << ')';
-		std::cout << '\n';
-		//std::cout  << "Вывод против часовой стрелки: \n";
+		*ptr_out << counter << " треугольник:\n";
+		*ptr_out << '(' << arr_vertex[0][i] << ';' << arr_vertex[1][i] << ')' << '(' << arr_vertex[0][i + 1] << ';' << arr_vertex[1][i + 1] << ')' << '(' << arr_vertex[0][i + 2] << ';' << arr_vertex[1][i + 2] << ')';
+		*ptr_out << '\n';
+		//*ptr_out  << "Вывод против часовой стрелки: \n";
 
 		double first_vertex_x = arr_vertex[0][i];
 		double first_vertex_y = arr_vertex[1][i];
@@ -1953,10 +1962,10 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 		double cross = get_cross(first_vertex_x, first_vertex_y, second_vertex_x, second_vertex_y, third_vertex_x, third_vertex_y);
 		if (cross > 0) // точки идут против часовой стрелки 
 		{
-			std::cout << "TRIANGLE: ";
-			std::cout << '(' << first_vertex_x << ';' << first_vertex_y << ')' << ' ';
-			std::cout << '(' << second_vertex_x << ';' << second_vertex_y << ')' << ' ';
-			std::cout << '(' << third_vertex_x << ';' << third_vertex_y << ')' << "\n";
+			*ptr_out << "TRIANGLE: ";
+			*ptr_out << '(' << first_vertex_x << ';' << first_vertex_y << ')' << ' ';
+			*ptr_out << '(' << second_vertex_x << ';' << second_vertex_y << ')' << ' ';
+			*ptr_out << '(' << third_vertex_x << ';' << third_vertex_y << ')' << "\n";
 
 			*ptr_res << "TRIANGLE: ";
 			*ptr_res << '(' << first_vertex_x << ';' << first_vertex_y << ')' << ' ';
@@ -1965,10 +1974,10 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 		}
 		if (cross < 0) // точки идут по часовой срелке 
 		{
-			std::cout << "TRIANGLE: ";
-			std::cout << '(' << first_vertex_x << ';' << first_vertex_y << ')' << ' ';
-			std::cout << '(' << third_vertex_x << ';' << third_vertex_y << ')' << ' ';
-			std::cout << '(' << second_vertex_x << ';' << second_vertex_y << ')' << "\n";
+			*ptr_out << "TRIANGLE: ";
+			*ptr_out << '(' << first_vertex_x << ';' << first_vertex_y << ')' << ' ';
+			*ptr_out << '(' << third_vertex_x << ';' << third_vertex_y << ')' << ' ';
+			*ptr_out << '(' << second_vertex_x << ';' << second_vertex_y << ')' << "\n";
 
 			*ptr_res << "TRIANGLE: ";
 			*ptr_res << '(' << first_vertex_x << ';' << first_vertex_y << ')' << ' ';
@@ -1978,7 +1987,7 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 		counter++;
 		if (counter % 2 - 1 == 0)
 		{
-			*ptr_res << '\n'; std::cout << '\n';
+			*ptr_res << '\n'; *ptr_out << '\n';
 		}
 	}
 
