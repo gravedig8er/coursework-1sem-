@@ -8,6 +8,7 @@ int protocol_arrays(std::fstream* ptr_out, double** points, const int* size);
 void transfer_arrays(double** res_points, double** points, const int* total_points, const int* size);
 void output_result(std::fstream* ptr_res, double** res_points, const int* total_points);
 void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res_points, const int* size);
+bool indexes_are_same(const int& i, const int& j, const int& k, const int& i1, const int& j1, const int& k1);
 void perm(double** tem_ar, int size);
 bool get_intersection(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double& ix, double& iy);
 double min(double a, double b);
@@ -248,21 +249,20 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 	double** arr_vertex = new double* [2];
 	for (int i = 0; i < 2; i++) arr_vertex[i] = new double[6];
 	// перебор вершин для первого треугольника
-	for (int i = 0; i < *size - 3; i++)
+	for (int i = 0; i < *size - 2; i++)
 	{
-		for (int j = i + 1; j < *size - 2; j++)
+		for (int j = i + 1; j < *size - 1; j++)
 		{
-			for (int k = j + 1; k < *size - 1; k++)
+			for (int k = j + 1; k < *size; k++)
 			{
 				// перебор вершин для второго треугольника 
-				for (int i1 = 0; i1 < *size - 3; i1++)
+				for (int i1 = i; i1 < *size - 2; i1++)
 				{
-					for (int j1 = i1 + 1; j1 < *size - 2; j1++)
+					for (int j1 = max(j, i1 + 1); j1 < *size - 1; j1++)
 					{
-						for (int k1 = j1 + 1; k1 < *size - 1; k1++)
+						for (int k1 = j1 + 1; k1 < *size; k1++)
 						{
-							static size_t counter;
-							std::cout << "Pairs collected" << ++counter << '\n';
+
 							*ptr_out << "First triangle: "
 								<< '(' << res_points[0][i] << ';' << res_points[1][i] << ')' << ' '
 								<< '(' << res_points[0][j] << ';' << res_points[1][j] << ')' << ' '
@@ -271,6 +271,10 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 								<< '(' << res_points[0][i1] << ';' << res_points[1][i1] << ')' << ' '
 								<< '(' << res_points[0][j1] << ';' << res_points[1][j1] << ')' << ' '
 								<< '(' << res_points[0][k1] << ';' << res_points[1][k1] << ')' << ' ';
+							if (indexes_are_same(i, j, k, i1, j1, k1))
+							{
+								*ptr_out << "Такой набор точек не подходит для создания треугольника \n\n"; continue;
+							}
 							if (((i == i1 && j == j1 && k == k1) ||
 								(i == i1 && j == k1 && k == j1) ||
 								(i == j1 && j == i1 && k == k1) ||
@@ -1909,12 +1913,6 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 									}
 									*ptr_out << '\n';
 									*ptr_out << "SQUARE " << sq_figure << "\n";
-									if (sq_figure == 52.0) std::cout << res_points[0][i] << ' ' << res_points[1][i] << ' ' <<
-										res_points[0][j] << ' ' << res_points[1][j] << ' ' <<
-										res_points[0][k] << ' ' << res_points[1][k] << '\n' <<
-										res_points[0][i1] << ' ' << res_points[1][i1] << ' ' <<
-										res_points[0][j1] << ' ' << res_points[1][j1] << ' ' <<
-										res_points[0][k1] << ' ' << res_points[1][k1] << '\n';
 									*ptr_out << "\n";
 									memory_delete(finally_ar);
 
@@ -1992,6 +1990,12 @@ void create_triangles(std::fstream* ptr_out, std::fstream* ptr_res, double** res
 	}
 
 	memory_delete(arr_vertex);
+}
+
+bool indexes_are_same(const int& i, const int& j, const int& k,
+	const int& i1, const int& j1, const int& k1)
+{
+	return (i == i1 && j == j1 && k == k1);
 }
 
 void perm(double** temp_ar, int size)
